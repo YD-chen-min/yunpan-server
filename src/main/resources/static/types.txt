@@ -1,0 +1,4 @@
+png-jpg-jpeg-pic-psd
+avi-mov-mp4-wma
+doc-excel-iso-jar-md-pdf-ppt-pptx-txt-word-xls-xlsx-html-docx
+mp3

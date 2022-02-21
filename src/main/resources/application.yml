@@ -1,0 +1,30 @@
+my-config:
+  hdfsURL: hdfs://hadoop01:9000/yunpan/
+  hostURL: D:\kkFileView-4.4\file\
+  temp: D:\HDFSFile\
+#  hostURL: /home/hdfsuser/
+spring:
+  jpa:
+    show-sql: true
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://hadoop01:3306/test?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=utf-8
+    username: root
+    password: daian0401
+  mvc:
+    view:
+      prefix: /WEB-INF/
+      suffix: .jsp
+    static-path-pattern: /**
+  resources:
+    static-locations: classpath:/
+  servlet:
+    multipart:
+      max-file-size: -1
+      max-request-size: -1
+#logging:
+#  level:
+#    com.yandan.yunstorage.dao : debug
+
+server:
+  port: 10001
