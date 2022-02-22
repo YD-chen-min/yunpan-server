@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
  * 2021/12/30  16:09
  */
 @Service
-@Slf4j
 public class UserServiceImpl  implements UserService {
     @Autowired
     private UserDao userDao;

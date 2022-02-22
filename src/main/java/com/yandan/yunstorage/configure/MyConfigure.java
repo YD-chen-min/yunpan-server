@@ -17,4 +17,6 @@ public class MyConfigure {
     private String hostUrl;
     @Value("${my-config.temp}")
     private String temp;
+    @Value("${my-config.log}")
+    private String log;
 }

@@ -339,4 +339,14 @@ public class FileServiceImpl implements FileService {
     public List<MyFile> getShareFileList(String root) {
         return fileDao.getShareFiles(root);
     }
+
+    @Override
+    public void setDeleteByDir(String dir, int delete) {
+        fileDao.setDeleteByDir(dir,delete);
+    }
+
+    @Override
+    public int deleteDataBaseFilesByDir(String dir) {
+        return fileDao.deleteFilesByDir(dir);
+    }
 }

@@ -169,5 +169,17 @@ public interface FileService {
      */
     List<MyFile> getShareFileList(String root);
 
+    /**
+     * 设置目录下的文件delete字段
+     * @param dir
+     * @param delete
+     */
+    void  setDeleteByDir(String dir,int delete);
 
+    /**
+     * 删除目录下的数据库文件信息
+     * @param dir
+     * @return
+     */
+    int deleteDataBaseFilesByDir(String dir);
 }

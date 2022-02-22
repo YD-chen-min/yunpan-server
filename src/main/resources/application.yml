@@ -2,6 +2,7 @@ my-config:
   hdfsURL: hdfs://hadoop01:9000/yunpan/
   hostURL: D:\kkFileView-4.4\file\
   temp: D:\HDFSFile\
+  log: D:\log\
 #  hostURL: /home/hdfsuser/
 spring:
   jpa:

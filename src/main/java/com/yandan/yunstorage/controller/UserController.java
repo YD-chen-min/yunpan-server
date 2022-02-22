@@ -5,6 +5,7 @@ import com.yandan.yunstorage.data.UserForm;
 import com.yandan.yunstorage.data.UserInfo;
 import com.yandan.yunstorage.service.FileService;
 import com.yandan.yunstorage.service.UserService;
+import com.yandan.yunstorage.util.Logger;
 import com.yandan.yunstorage.util.ResultVOUtil;
 import lombok.extern.log4j.Log4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,6 @@ import javax.servlet.http.HttpServletRequest;
  * Create by yandan
  * 2021/12/30  18:16
  */
-@Log4j
 @RestController
 public class UserController {
 
@@ -27,13 +27,14 @@ public class UserController {
     private UserService userService;
     @Autowired
     private FileService fileService;
+    @Autowired
+    private  Logger logger;
     @Transactional
     @PostMapping("/user/register")
     @ResponseBody
     public ResultVO<UserInfo> register(@Validated UserForm userForm, BindingResult bindingResult, HttpServletRequest request){
         String ip =getIpAddr(request);
         if(bindingResult.hasErrors()){
-            log.error("【注册】：参数错误");
             return ResultVOUtil.fail(1,"参数错误");
         }
         userForm.setIp(ip);
@@ -106,10 +107,10 @@ public class UserController {
     @ResponseBody
     public ResultVO<UserInfo> modifyUserInfo(@Validated UserForm userForm, BindingResult bindingResult){
         if(bindingResult.hasErrors()){
-            log.error("【登录】：参数错误");
             return ResultVOUtil.fail(1,"参数错误");
         }
         UserInfo userInfo = userService.modifyUserInfo(userForm);
+        logger.userLogIn(userForm.getUser(),"修改用户信息");
         return ResultVOUtil.success(userInfo);
     }
     @Transactional
@@ -117,10 +118,10 @@ public class UserController {
     @ResponseBody
     public ResultVO modifyPassword(@RequestParam(value = "user",defaultValue="")String user,@RequestParam(value = "password",defaultValue = "")String password){
         if("".equals(password)||"".equals(password)){
-            log.error("【修改密码】：参数错误");
             return ResultVOUtil.fail(1,"参数错误");
         }
         userService.modifyPassword(user,password);
+        logger.userLogIn(user,"修改密码");
         return ResultVOUtil.success("密码修改成功");
     }
     @Transactional
@@ -154,6 +155,13 @@ public class UserController {
         if (userInfo==null) return ResultVOUtil.fail(1,"no user");
         double f=userInfo.getBusy()/userInfo.getStore()*100.0;
         return ResultVOUtil.success(f);
+    }
+
+    @GetMapping("/user/get/info")
+    @ResponseBody
+    public ResultVO getUserInfo(@RequestParam("user")String user){
+        UserInfo userInfo=userService.getUserInfoByUser(user);
+        return ResultVOUtil.success(userInfo);
     }
 
 

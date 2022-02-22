@@ -8,6 +8,7 @@ import com.yandan.yunstorage.converter.Converter;
 import com.yandan.yunstorage.data.UserInfo;
 import com.yandan.yunstorage.service.FileService;
 import com.yandan.yunstorage.service.UserService;
+import com.yandan.yunstorage.util.Logger;
 import com.yandan.yunstorage.util.ResultVOUtil;
 import lombok.extern.log4j.Log4j;
 import org.apache.commons.io.FileUtils;
@@ -21,9 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
 import java.io.File;
-import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Base64;
 import java.util.Date;
@@ -33,7 +32,6 @@ import java.util.List;
  * Create by yandan
  * 2021/12/31  16:45
  */
-@Log4j
 @RestController
 public class FileController {
     @Autowired
@@ -42,6 +40,8 @@ public class FileController {
     private FileService fileService;
     @Autowired
     private MyConfigure myConfigure;
+    @Autowired
+    private Logger logger;
 
     /**
      * 获取登录用户IP地址
@@ -109,6 +109,7 @@ public class FileController {
         }
         File file = fileService.getFile(path);
         String name = path.split("/")[path.split("/").length - 1];
+        logger.userLogIn(user,"下载文件   '"+name+"'");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentDispositionFormData("attachment",
@@ -120,7 +121,7 @@ public class FileController {
 
     @Transactional
     @RequestMapping(value = "/file/share/download")
-    public ResponseEntity<byte[]> downloadShare(HttpServletRequest request, @RequestParam("path") String path
+    public ResponseEntity<byte[]> downloadShare(HttpServletRequest request, @RequestParam("path") String path,@RequestParam("user")String user
                                        )
             throws Exception {
 
@@ -132,6 +133,7 @@ public class FileController {
         MyFile myFile=fileService.getMyFile(path);
         if(myFile.getIsShare()==1){
             String name = path.split("/")[path.split("/").length - 1];
+            logger.userLogIn(user,"下载共享文件  '"+name+"'");
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
             headers.setContentDispositionFormData("attachment",
@@ -205,6 +207,7 @@ public class FileController {
         fileService.uploadFile(srcPath, dstPath);
         hostFile.delete();
         src.delete();
+        logger.userLogIn(user,"上传文件   '"+myFile.getName()+"'");
         return ResultVOUtil.success("上传成功！");
     }
 
@@ -224,6 +227,7 @@ public class FileController {
             String[] newNames = newPath.split("/");
             String newName = newNames[newNames.length - 1];
             fileService.modifyFileName(oldPath, newPath, newName);
+            logger.userLogIn(user,"文件路径修改 '"+oldPath+"' ---> '"+newPath+"'");
             File file = new File(myConfigure.getHostUrl() + oldPath);
             if (file.exists()) {
                 file.renameTo(new File(myConfigure.getHostUrl() + newPath));
@@ -253,6 +257,7 @@ public class FileController {
         for (String f : file) {
             if (fileService.rename(path + f, "garbage/" + path + f))
                 i++;
+            logger.userLogIn(user,f+"'  ---> 回收站");
             fileService.setDeleteDatabaseFile(path + f, 1);
         }
         return ResultVOUtil.success(count + "个文件，其中" + i + "个文件被删除");
@@ -279,12 +284,16 @@ public class FileController {
             if (fileService.deleteFile(f))
                 i++;
             MyFile myFile = fileService.getMyFile(f.replace("garbage/", ""));
-            size += myFile.getRealSize();
-            fileService.deleteDatabaseFile(f.replace("garbage/", ""));
-            File file1 = new File(myConfigure.getHostUrl() + f.replace(myConfigure.getHdfsUrl() + "garbage/", ""));
-            if (file1.exists()) {
-                file1.delete();
+            if (myFile!=null){
+                size += myFile.getRealSize();
+                fileService.deleteDatabaseFile(f.replace("garbage/", ""));
+                File file1 = new File(myConfigure.getHostUrl() + f.replace(myConfigure.getHdfsUrl() + "garbage/", ""));
+                if (file1.exists()) {
+                    file1.delete();
+                }
+
             }
+            logger.userLogIn(user,"'"+f+"'   彻底删除");
         }
         userService.setSize(userInfo.getBusy() - size, userInfo.getUser());
         return ResultVOUtil.success(count + "个文件，其中" + i + "个文件被删除");
@@ -311,7 +320,7 @@ public class FileController {
         if (file1.exists()) {
             file1.delete();
         }
-
+        logger.userLogIn(user,"'"+files+"'  彻底删除");
         userService.setSize(userInfo.getBusy() - size, userInfo.getUser());
         return ResultVOUtil.success("删除成功！");
     }
@@ -328,13 +337,16 @@ public class FileController {
         if (!ip.equals(userInfo.getIp())) {
             return ResultVOUtil.fail(1, "无权限访问");
         }
-        long size = (long) fileService.getMyFilesByDir(path.replace("garbage/", ""));
+        path=path.replace(myConfigure.getHdfsUrl(),"");
+        long size = (long) fileService.getMyFilesByDir(path.replace("garbage/", "")+"%");
         fileService.deleteFiles(path);
         File file = new File(myConfigure.getHostUrl() + path.replace("garbage/", ""));
         if (file.exists()) {
             file.delete();
         }
         userService.setSize(userInfo.getBusy() - size, userInfo.getUser());
+        fileService.deleteDataBaseFilesByDir(path.replace("garbage/", "")+"%");
+        logger.userLogIn(user,"目录  '"+path+"'   彻底删除");
         return ResultVOUtil.success("删除成功");
     }
 
@@ -342,13 +354,17 @@ public class FileController {
     @GetMapping("/file/deleteDri")
     @ResponseBody
     public ResultVO deleteDir(HttpServletRequest request,
-                              @RequestParam(value = "userInfo") UserInfo userInfo,
+                              @RequestParam(value = "user") String user,
                               @RequestParam(value = "path") String path) {
         String ip = getIpAddr(request);
+        UserInfo userInfo=userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
             return ResultVOUtil.fail(1, "无权限访问");
         }
+        path=path.replace(myConfigure.getHdfsUrl(),"");
+        fileService.setDeleteByDir(path+"%",1);
         fileService.rename(path, "garbage/" + path);
+        logger.userLogIn(user,"目录  '"+path+"'   --->回收站");
         return ResultVOUtil.success("删除成功");
     }
 
@@ -363,9 +379,10 @@ public class FileController {
         if (!ip.equals(userInfo.getIp())) {
             return ResultVOUtil.fail(1, "无权限访问");
         }
-        if (fileService.mkDir(path))
+        if (fileService.mkDir(path)) {
+            logger.userLogIn(user, "创建目录  '" + path+"'");
             return ResultVOUtil.success("创建成功！");
-
+        }
         return ResultVOUtil.fail(1, "目录已存在");
 
     }
@@ -386,6 +403,7 @@ public class FileController {
             File file = new File(myConfigure.getHostUrl() + oldPath);
             if (file.exists()) {
                 file.renameTo(new File(myConfigure.getHostUrl() + newPath));
+                logger.userLogIn(user,"文件移动: '"+oldPath+"' ---> '"+newPath+"'");
             }
         }
         String[] newNames = newPath.split("/");
@@ -441,6 +459,7 @@ public class FileController {
         int i = 0;
         int count = urls.length;
         for (String f : urls) {
+            logger.userLogIn(user,"文件  '"+url+"'  --->回收站");
             if (fileService.rename(f, "garbage/" + f))
                 i++;
             fileService.setDeleteDatabaseFile(f, 1);
@@ -464,6 +483,7 @@ public class FileController {
         String newUrl = url.substring(url.indexOf("/") + 1);
         if (fileService.rename(url, newUrl)) {
             fileService.setDeleteDatabaseFile(newUrl, 0);
+            logger.userLogIn(user,"还原文件  '"+newUrl+"'");
             return ResultVOUtil.success("还原成功！");
         }
         return ResultVOUtil.fail(1, "还原失败！");
@@ -489,6 +509,7 @@ public class FileController {
             String newUrl = u.substring(u.indexOf("/") + 1);
             if (fileService.rename(u, newUrl)) {
                 i++;
+                logger.userLogIn(user,"还原文件   '"+newUrl+"'");
                 fileService.setDeleteDatabaseFile(newUrl, 0);
             }
         }
@@ -521,6 +542,7 @@ public class FileController {
         }
         url=url.replace(myConfigure.getHdfsUrl(),"");
         fileService.setShare(url,1);
+        logger.userLogIn(user,"共享文件  '"+url+"'");
         return ResultVOUtil.success("ok");
     }
 
@@ -547,6 +569,7 @@ public class FileController {
             return ResultVOUtil.fail(1, "无权限访问");
         }
         fileService.setShare(url,0);
+        logger.userLogIn(user,"文件  '"+url+"'  取消共享");
         return ResultVOUtil.success("取消成功！");
     }
 }
