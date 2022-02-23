@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 /**
  * Create by yandan
  * 2021/12/30  16:09
@@ -91,5 +93,19 @@ public class UserServiceImpl  implements UserService {
     @Override
     public void setSize(float size, String user) {
         userDao.setUserBusy(user,size);
+    }
+
+    @Override
+    public List<UserInfo> getUsers(String user) {
+        if("".equals(user)){
+            return userDao.getUsers();
+        }else{
+            return userDao.getUsersLikeUser(user+"%");
+        }
+    }
+
+    @Override
+    public int deleteUserByUser(String user) {
+        return userDao.deleteByUser(user)+userDao.deleteUserHDFS(user);
     }
 }

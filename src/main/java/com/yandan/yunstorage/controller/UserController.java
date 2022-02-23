@@ -1,13 +1,14 @@
 package com.yandan.yunstorage.controller;
 
 import com.yandan.yunstorage.VO.ResultVO;
+import com.yandan.yunstorage.dao.AdminDao;
+import com.yandan.yunstorage.data.AdminInfo;
 import com.yandan.yunstorage.data.UserForm;
 import com.yandan.yunstorage.data.UserInfo;
 import com.yandan.yunstorage.service.FileService;
 import com.yandan.yunstorage.service.UserService;
 import com.yandan.yunstorage.util.Logger;
 import com.yandan.yunstorage.util.ResultVOUtil;
-import lombok.extern.log4j.Log4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
@@ -28,19 +29,22 @@ public class UserController {
     @Autowired
     private FileService fileService;
     @Autowired
-    private  Logger logger;
+    private Logger logger;
+    @Autowired
+    private AdminDao adminDao;
+
     @Transactional
     @PostMapping("/user/register")
     @ResponseBody
-    public ResultVO<UserInfo> register(@Validated UserForm userForm, BindingResult bindingResult, HttpServletRequest request){
-        String ip =getIpAddr(request);
-        if(bindingResult.hasErrors()){
-            return ResultVOUtil.fail(1,"参数错误");
+    public ResultVO<UserInfo> register(@Validated UserForm userForm, BindingResult bindingResult, HttpServletRequest request) {
+        String ip = getIpAddr(request);
+        if (bindingResult.hasErrors()) {
+            return ResultVOUtil.fail(1, "参数错误");
         }
         userForm.setIp(ip);
-        UserInfo userInfo=userService.setUserInfo(userForm);
+        UserInfo userInfo = userService.setUserInfo(userForm);
         fileService.mkDir(userInfo.getHdfs());
-        fileService.mkGDir("garbage/"+userInfo.getHdfs());
+        fileService.mkGDir("garbage/" + userInfo.getHdfs());
         return ResultVOUtil.success(userInfo);
     }
 
@@ -70,8 +74,8 @@ public class UserController {
     @Transactional
     @PostMapping("/user/login")
     @ResponseBody
-    public ResultVO<UserInfo> login(@RequestParam(value = "user",defaultValue = "") String user, HttpServletRequest request,
-                                  @RequestParam(value = "password",defaultValue = "")String password) {
+    public ResultVO<UserInfo> login(@RequestParam(value = "user", defaultValue = "") String user, HttpServletRequest request,
+                                    @RequestParam(value = "password", defaultValue = "") String password) {
         UserInfo userInfo;
         String ip = getIpAddr(request);
         if ("".equals(user)) {
@@ -87,82 +91,111 @@ public class UserController {
                 return ResultVOUtil.success(userInfo);
             }
         } else {
-            if(!userInfo.getPassword().equals(password)){
-                userInfo=userService.getUserInfoByUser(user);
-                if(userInfo==null)
+            if (!userInfo.getPassword().equals(password)) {
+                userInfo = userService.getUserInfoByUser(user);
+                if (userInfo == null)
                     return ResultVOUtil.fail(1, "账号或密码错误");
-                else if (userInfo.getPassword().equals(password)){
+                else if (userInfo.getPassword().equals(password)) {
                     userService.modifyMac(userInfo.getUser(), ip);
                     return ResultVOUtil.success(userInfo);
                 }
-            }else{
+            } else {
                 userService.modifyMac(userInfo.getUser(), ip);
                 return ResultVOUtil.success(userInfo);
             }
         }
-        return ResultVOUtil.fail(1,"账号或密码错误");
+        return ResultVOUtil.fail(1, "账号或密码错误");
     }
+
     @Transactional
     @PostMapping("/user/modify/baseInfo")
     @ResponseBody
-    public ResultVO<UserInfo> modifyUserInfo(@Validated UserForm userForm, BindingResult bindingResult){
-        if(bindingResult.hasErrors()){
-            return ResultVOUtil.fail(1,"参数错误");
+    public ResultVO<UserInfo> modifyUserInfo(@Validated UserForm userForm, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return ResultVOUtil.fail(1, "参数错误");
         }
         UserInfo userInfo = userService.modifyUserInfo(userForm);
-        logger.userLogIn(userForm.getUser(),"修改用户信息");
+        logger.userLogIn(userForm.getUser(), "修改用户信息");
         return ResultVOUtil.success(userInfo);
     }
+
     @Transactional
     @PostMapping("/user/modify/password")
     @ResponseBody
-    public ResultVO modifyPassword(@RequestParam(value = "user",defaultValue="")String user,@RequestParam(value = "password",defaultValue = "")String password){
-        if("".equals(password)||"".equals(password)){
-            return ResultVOUtil.fail(1,"参数错误");
+    public ResultVO modifyPassword(@RequestParam(value = "user", defaultValue = "") String user, @RequestParam(value = "password", defaultValue = "") String password) {
+        if ("".equals(password) || "".equals(password)) {
+            return ResultVOUtil.fail(1, "参数错误");
         }
-        userService.modifyPassword(user,password);
-        logger.userLogIn(user,"修改密码");
+        userService.modifyPassword(user, password);
+        logger.userLogIn(user, "修改密码");
         return ResultVOUtil.success("密码修改成功");
     }
+
     @Transactional
     @PostMapping("/user/delete")
     @ResponseBody
-    public ResultVO deleteUser(@RequestParam("users")String users){
-       String[] user= users.split(";");
-       int count=user.length;
-       int i=0;
-       for(String u:user){
-           UserInfo userInfo=userService.getUserInfoByUser(u);
-           fileService.deleteFiles(userInfo.getHdfs());
-           userService.deleteUser(u);
-           i++;
-       }
-       return ResultVOUtil.success(count+"条数据中，有"+i+"条数据及关联数据被彻底删除");
+    public ResultVO deleteUser(@RequestParam("users") String users) {
+        String[] user = users.split(";");
+        int count = user.length;
+        int i = 0;
+        for (String u : user) {
+            UserInfo userInfo = userService.getUserInfoByUser(u);
+            fileService.deleteFiles(userInfo.getHdfs());
+            userService.deleteUser(u);
+            i++;
+        }
+        return ResultVOUtil.success(count + "条数据中，有" + i + "条数据及关联数据被彻底删除");
     }
 
     @GetMapping("/user/exist")
     @ResponseBody
-    public ResultVO exist(@RequestParam("user")String user){
+    public ResultVO exist(@RequestParam("user") String user) {
         if (userService.userExist(user))
             return ResultVOUtil.success("该账号已存在");
-        return ResultVOUtil.fail(1,"");
+        return ResultVOUtil.fail(1, "");
     }
 
     @GetMapping("/user/get/free")
     @ResponseBody
-    public ResultVO getUserFree(@RequestParam("user")String user){
-        UserInfo userInfo=userService.getUserInfoByUser(user);
-        if (userInfo==null) return ResultVOUtil.fail(1,"no user");
-        double f=userInfo.getBusy()/userInfo.getStore()*100.0;
+    public ResultVO getUserFree(@RequestParam("user") String user) {
+        UserInfo userInfo = userService.getUserInfoByUser(user);
+        if (userInfo == null) return ResultVOUtil.fail(1, "no user");
+        double f = userInfo.getBusy() / userInfo.getStore() * 100.0;
         return ResultVOUtil.success(f);
     }
 
     @GetMapping("/user/get/info")
     @ResponseBody
-    public ResultVO getUserInfo(@RequestParam("user")String user){
-        UserInfo userInfo=userService.getUserInfoByUser(user);
+    public ResultVO getUserInfo(@RequestParam("user") String user) {
+        UserInfo userInfo = userService.getUserInfoByUser(user);
         return ResultVOUtil.success(userInfo);
     }
 
+    @GetMapping("/user/getList")
+    @ResponseBody
+    public ResultVO getUsers(@RequestParam(value = "user", defaultValue = "") String user) {
+        return ResultVOUtil.success(userService.getUsers(user));
+    }
 
+    @PostMapping("/user/delete")
+    @ResponseBody
+    public ResultVO deleteUserByUser(HttpServletRequest httpServletRequest, @RequestParam("user") String user, @RequestParam("admin") String admin) {
+        String ip = getIpAddr(httpServletRequest);
+        AdminInfo adminInfo = adminDao.getUserByUser(admin);
+        if (adminInfo == null) {
+            return ResultVOUtil.fail(1, "信息错误");
+        }
+        if (!ip.equals(adminInfo.getIp())) {
+            return ResultVOUtil.fail(1, "无权限访问");
+        }
+        int count = userService.deleteUserByUser(user);
+        String message = "";
+        message += "删除用户 <账号>" + user + ";  影响数据库表<users>结果数目 : " + count;
+        count = fileService.deleteDataBaseFileByRoot(user + "/");
+        message += ";  影响数据库表<users>结果数目 : " + count;
+        fileService.deleteFiles(user );
+        fileService.deleteFiles("garbage/"+user);
+        logger.adminLogIn(admin, message);
+        return ResultVOUtil.success("success");
+    }
 }

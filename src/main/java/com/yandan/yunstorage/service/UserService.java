@@ -3,6 +3,8 @@ package com.yandan.yunstorage.service;
 import com.yandan.yunstorage.data.UserForm;
 import com.yandan.yunstorage.data.UserInfo;
 
+import java.util.List;
+
 /**
  * Create by yandan
  * 2021/12/30  15:37
@@ -72,5 +74,17 @@ public interface UserService {
      */
     void setSize(float size,String user);
 
+    /**
+     * 根据user获取用户信息集合；如果user为空则获取全部user信息
+     * @param user
+     * @return
+     */
+    List<UserInfo> getUsers(String user);
 
+    /**
+     * 根据user删除user信息
+     * @param user
+     * @return
+     */
+    int deleteUserByUser(String user);
 }

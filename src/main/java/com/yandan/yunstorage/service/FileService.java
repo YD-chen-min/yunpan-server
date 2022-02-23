@@ -182,4 +182,11 @@ public interface FileService {
      * @return
      */
     int deleteDataBaseFilesByDir(String dir);
+
+    /**
+     * 删除某用户下所的数据库记录
+     * @param root
+     * @return
+     */
+    int deleteDataBaseFileByRoot(String root);
 }

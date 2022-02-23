@@ -74,4 +74,58 @@ public class Logger {
         }
         return null;
     }
+    public  void adminLogIn(String user, String msg){
+        String logPath=myConfigure.getLog();
+        File file=new File(logPath+"admin.log");
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        String message=simpleDateFormat.format(new Date());
+        BufferedWriter bufferedWriter=null;
+        try {
+            bufferedWriter=new BufferedWriter(new FileWriter(file,true));
+            bufferedWriter.append(message+"\t"+msg+"\n");
+            bufferedWriter.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            if (bufferedWriter!=null){
+                try {
+                    bufferedWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
+    }
+    public  List<History> adminLogOut(String user){
+        List<History> historyList=new ArrayList<>();
+        String logPath=myConfigure.getLog();
+        File file=new File(logPath+"admin.log");
+        if (file.exists()&&file.isFile()){
+            try {
+                BufferedReader bufferedReader=new BufferedReader(new FileReader(file));
+                String line=bufferedReader.readLine();
+                while (line!=null){
+                    History history=new History();
+                    String[] lines=line.split("\t");
+                    history.setTime(lines[0]);
+                    history.setOption(lines[1]);
+                    historyList.add(history);
+                    line=bufferedReader.readLine();
+                }
+                return historyList;
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
 }

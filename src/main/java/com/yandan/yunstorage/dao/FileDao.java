@@ -40,4 +40,6 @@ public interface FileDao {
     int setDeleteByDir(@Param("dir")String dir,@Param("delete") int delete);
     @Delete("delete from files where url like #{dir}")
     int deleteFilesByDir(@Param("dir")String dir);
+    @Delete("delete from files where root=#{}")
+    int deleteByRoot(@Param("root")String root);
 }

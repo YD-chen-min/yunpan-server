@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * Create by yandan
  * 2021/12/30  15:56
@@ -40,4 +42,11 @@ public interface UserDao {
     int updateUserMac(@Param("user")String user,@Param("ip")String ip);
     @Update("update user set busy=#{size} where user=#{user}")
     int setUserBusy(@Param("user")String user,@Param("size")float size);
+    @Select("select * from user")
+    List<UserInfo> getUsers();
+    @Select("select * from user where user like #{user}")
+    List<UserInfo> getUsersLikeUser(@Param("user")String user);
+    @Delete("delete from user where user = #{user}")
+    int deleteByUser(@Param("user")String user);
+
 }

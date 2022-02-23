@@ -349,4 +349,9 @@ public class FileServiceImpl implements FileService {
     public int deleteDataBaseFilesByDir(String dir) {
         return fileDao.deleteFilesByDir(dir);
     }
+
+    @Override
+    public int deleteDataBaseFileByRoot(String root) {
+        return fileDao.deleteByRoot(root);
+    }
 }
