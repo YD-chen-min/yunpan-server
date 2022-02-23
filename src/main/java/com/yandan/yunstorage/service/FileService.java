@@ -139,7 +139,7 @@ public interface FileService {
      * @param url
      * @return
      */
-    float getMyFilesByDir(String url);
+    Float getMyFilesByDir(String url);
 
     /**
      * 获取下载次数

@@ -10,7 +10,6 @@ import com.yandan.yunstorage.service.FileService;
 import com.yandan.yunstorage.service.UserService;
 import com.yandan.yunstorage.util.Logger;
 import com.yandan.yunstorage.util.ResultVOUtil;
-import lombok.extern.log4j.Log4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -227,7 +226,7 @@ public class FileController {
             String[] newNames = newPath.split("/");
             String newName = newNames[newNames.length - 1];
             fileService.modifyFileName(oldPath, newPath, newName);
-            logger.userLogIn(user,"文件路径修改 '"+oldPath+"' ---> '"+newPath+"'");
+            logger.userLogIn(user,"文件路径修改 '"+oldPath.replace(user+"/","")+"' ---> '"+newPath.replace(user+"/","")+"'");
             File file = new File(myConfigure.getHostUrl() + oldPath);
             if (file.exists()) {
                 file.renameTo(new File(myConfigure.getHostUrl() + newPath));
@@ -338,7 +337,10 @@ public class FileController {
             return ResultVOUtil.fail(1, "无权限访问");
         }
         path=path.replace(myConfigure.getHdfsUrl(),"");
-        long size = (long) fileService.getMyFilesByDir(path.replace("garbage/", "")+"%");
+        Float size =fileService.getMyFilesByDir(path.replace("garbage/", "")+"%");
+        if (size==null){
+            size=new Float(0);
+        }
         fileService.deleteFiles(path);
         File file = new File(myConfigure.getHostUrl() + path.replace("garbage/", ""));
         if (file.exists()) {
@@ -346,7 +348,7 @@ public class FileController {
         }
         userService.setSize(userInfo.getBusy() - size, userInfo.getUser());
         fileService.deleteDataBaseFilesByDir(path.replace("garbage/", "")+"%");
-        logger.userLogIn(user,"目录  '"+path+"'   彻底删除");
+        logger.userLogIn(user,"目录  '"+path.replace(user+"/","")+"'   彻底删除");
         return ResultVOUtil.success("删除成功");
     }
 
@@ -364,7 +366,7 @@ public class FileController {
         path=path.replace(myConfigure.getHdfsUrl(),"");
         fileService.setDeleteByDir(path+"%",1);
         fileService.rename(path, "garbage/" + path);
-        logger.userLogIn(user,"目录  '"+path+"'   --->回收站");
+        logger.userLogIn(user,"目录  '"+path.replace(user+"/","")+"'   --->回收站");
         return ResultVOUtil.success("删除成功");
     }
 
@@ -380,7 +382,7 @@ public class FileController {
             return ResultVOUtil.fail(1, "无权限访问");
         }
         if (fileService.mkDir(path)) {
-            logger.userLogIn(user, "创建目录  '" + path+"'");
+            logger.userLogIn(user, "创建目录  '" + path.replace(user+"/","")+"'");
             return ResultVOUtil.success("创建成功！");
         }
         return ResultVOUtil.fail(1, "目录已存在");
@@ -403,7 +405,7 @@ public class FileController {
             File file = new File(myConfigure.getHostUrl() + oldPath);
             if (file.exists()) {
                 file.renameTo(new File(myConfigure.getHostUrl() + newPath));
-                logger.userLogIn(user,"文件移动: '"+oldPath+"' ---> '"+newPath+"'");
+                logger.userLogIn(user,"文件移动: '"+oldPath.replace(user+"/","")+"' ---> '"+newPath.replace(user+"/","")+"'");
             }
         }
         String[] newNames = newPath.split("/");
@@ -459,7 +461,7 @@ public class FileController {
         int i = 0;
         int count = urls.length;
         for (String f : urls) {
-            logger.userLogIn(user,"文件  '"+url+"'  --->回收站");
+            logger.userLogIn(user,"文件  '"+url.replace(user+"/","")+"'  --->回收站");
             if (fileService.rename(f, "garbage/" + f))
                 i++;
             fileService.setDeleteDatabaseFile(f, 1);
@@ -483,7 +485,7 @@ public class FileController {
         String newUrl = url.substring(url.indexOf("/") + 1);
         if (fileService.rename(url, newUrl)) {
             fileService.setDeleteDatabaseFile(newUrl, 0);
-            logger.userLogIn(user,"还原文件  '"+newUrl+"'");
+            logger.userLogIn(user,"还原文件  '"+newUrl.replace(user+"/","")+"'");
             return ResultVOUtil.success("还原成功！");
         }
         return ResultVOUtil.fail(1, "还原失败！");
@@ -509,7 +511,7 @@ public class FileController {
             String newUrl = u.substring(u.indexOf("/") + 1);
             if (fileService.rename(u, newUrl)) {
                 i++;
-                logger.userLogIn(user,"还原文件   '"+newUrl+"'");
+                logger.userLogIn(user,"还原文件   '"+newUrl.replace(user+"/","")+"'");
                 fileService.setDeleteDatabaseFile(newUrl, 0);
             }
         }
@@ -542,7 +544,7 @@ public class FileController {
         }
         url=url.replace(myConfigure.getHdfsUrl(),"");
         fileService.setShare(url,1);
-        logger.userLogIn(user,"共享文件  '"+url+"'");
+        logger.userLogIn(user,"共享文件  '"+url.replace(user+"/","")+"'");
         return ResultVOUtil.success("ok");
     }
 
@@ -569,7 +571,7 @@ public class FileController {
             return ResultVOUtil.fail(1, "无权限访问");
         }
         fileService.setShare(url,0);
-        logger.userLogIn(user,"文件  '"+url+"'  取消共享");
+        logger.userLogIn(user,"文件  '"+url.replace(user+"/","")+"'  取消共享");
         return ResultVOUtil.success("取消成功！");
     }
 }

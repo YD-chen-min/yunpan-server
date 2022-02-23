@@ -316,7 +316,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public float getMyFilesByDir(String url) {
+    public Float getMyFilesByDir(String url) {
         return fileDao.getFilesSizeByDir(url+"%%");
     }
 

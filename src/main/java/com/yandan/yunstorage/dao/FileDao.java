@@ -26,7 +26,7 @@ public interface FileDao {
     @Select("select * from files where url=#{url}")
     MyFile getFile(@Param("url")String url);
     @Select("select sum(realSize) from files where url like #{url} ")
-    float getFilesSizeByDir(@Param("url")String url);
+    Float getFilesSizeByDir(@Param("url")String url);
     @Select("select downloadCount from files where url=#{url}")
     int getDownCount(@Param("url")String url);
 
