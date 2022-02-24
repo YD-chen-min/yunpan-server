@@ -8,10 +8,7 @@ import com.yandan.yunstorage.util.Logger;
 import com.yandan.yunstorage.util.ResultVOUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -93,5 +90,16 @@ public class AdminController {
         adminService.modifyPassword(user,password);
         logger.adminLogIn("修改密码");
         return ResultVOUtil.success("密码修改成功");
+    }
+    @GetMapping("/admin/get/info")
+    @ResponseBody
+    public ResultVO getAdminInfo(@RequestParam("user") String user) {
+        AdminInfo userInfo = adminService.getAdminInfoByUser(user);
+        if (userInfo==null)
+            userInfo=adminService.getAdminInfoByTel(user);
+        if (userInfo==null){
+            return ResultVOUtil.fail(1,"用户不存在");
+        }
+        return ResultVOUtil.success(userInfo);
     }
 }

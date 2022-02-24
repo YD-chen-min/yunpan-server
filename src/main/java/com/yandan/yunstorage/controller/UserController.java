@@ -154,6 +154,11 @@ public class UserController {
     @ResponseBody
     public ResultVO getUserInfo(@RequestParam("user") String user) {
         UserInfo userInfo = userService.getUserInfoByUser(user);
+        if (userInfo==null)
+            userInfo=userService.getUserInfoByTel(user);
+        if (userInfo==null){
+            return ResultVOUtil.fail(1,"用户不存在");
+        }
         return ResultVOUtil.success(userInfo);
     }
 

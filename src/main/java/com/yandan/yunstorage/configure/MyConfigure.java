@@ -21,4 +21,12 @@ public class MyConfigure {
     private String log;
     @Value("${my-config.hadoopJmxServerUrl}")
     private String hadoopJmxServerUrl;
+    @Value("${my-config.smtp}")
+    private String smtp;
+    @Value("${my-config.code}")
+    private String code;
+    @Value("${my-config.hostEmail}")
+    private String hostEmail;
+    @Value("${my-config.userName}")
+    private String userName;
 }

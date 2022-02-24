@@ -4,6 +4,10 @@ my-config:
   temp: D:\HDFSFile\
   log: D:\log\
   hadoopJmxServerUrl : "http://192.168.164.110:50070"
+  code : "UlZBVk9PRElSRkhMUkZFUQ=="
+  smtp: "smtp.163.com"
+  hostEmail : "yandancm@163.com"
+  userName: "墨家云盘"
 #  hostURL: /home/hdfsuser/
 spring:
   jpa:
