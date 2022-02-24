@@ -6,6 +6,7 @@ import com.yandan.yunstorage.VO.ResultVO;
 import com.yandan.yunstorage.configure.MyConfigure;
 import com.yandan.yunstorage.converter.Converter;
 import com.yandan.yunstorage.data.UserInfo;
+import com.yandan.yunstorage.hadoop.HadoopUtil;
 import com.yandan.yunstorage.service.FileService;
 import com.yandan.yunstorage.service.UserService;
 import com.yandan.yunstorage.util.Logger;
@@ -41,6 +42,7 @@ public class FileController {
     private MyConfigure myConfigure;
     @Autowired
     private Logger logger;
+
 
     /**
      * 获取登录用户IP地址

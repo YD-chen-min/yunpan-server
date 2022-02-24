@@ -35,9 +35,20 @@ public class LogController {
     public ResultVO getUserLog(@RequestParam("user") String user){
         return ResultVOUtil.success(logger.userLogOut(user));
     }
+
+    @GetMapping("/log/get/admin")
+    @ResponseBody
+    public ResultVO getAdminLog(){
+        return ResultVOUtil.success(logger.adminLogOut());
+    }
+    @GetMapping("/log/get/error")
+    @ResponseBody
+    public  ResultVO getErrorLog(){
+        return ResultVOUtil.success(logger.errorLogOut());
+    }
     @Transactional
     @RequestMapping(value = "/log/user/download")
-    public ResponseEntity<byte[]> download(@RequestParam(value = "user") String user) throws Exception {
+    public ResponseEntity<byte[]> downloadUserLog(@RequestParam(value = "user") String user) throws Exception {
 
 
 
@@ -52,6 +63,44 @@ public class LogController {
                 URLEncoder.encode(user+".log", "UTF-8"));
         ResponseEntity<byte[]> responseEntity = new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file), headers, HttpStatus.OK);
         logger.userLogIn(user,"下载日志 ");
+        return responseEntity;
+    }
+    @Transactional
+    @RequestMapping("/log/admin/download")
+    public ResponseEntity<byte[]> downloadAdminLog() throws Exception {
+
+
+
+        File file=new File(myConfigure.getLog()+"admin.log");
+        if (!file.exists()){
+            return null;
+
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment",
+                URLEncoder.encode("admin.log", "UTF-8"));
+        ResponseEntity<byte[]> responseEntity = new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file), headers, HttpStatus.OK);
+        logger.adminLogIn("下载日志 ");
+        return responseEntity;
+    }
+    @Transactional
+    @RequestMapping("/log/error/download")
+    public ResponseEntity<byte[]> downloadErrorLog() throws Exception {
+
+
+
+        File file=new File(myConfigure.getLog()+"error.log");
+        if (!file.exists()){
+            return null;
+
+        }
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentDispositionFormData("attachment",
+                URLEncoder.encode("error.log", "UTF-8"));
+        ResponseEntity<byte[]> responseEntity = new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file), headers, HttpStatus.OK);
+        logger.adminLogIn("下载错误日志");
         return responseEntity;
     }
 }

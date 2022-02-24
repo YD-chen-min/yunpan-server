@@ -6,6 +6,7 @@ import com.yandan.yunstorage.configure.MyConfigure;
 import com.yandan.yunstorage.converter.Converter;
 import com.yandan.yunstorage.dao.FileDao;
 import com.yandan.yunstorage.service.FileService;
+import com.yandan.yunstorage.util.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -37,6 +38,8 @@ public class FileServiceImpl implements FileService {
 
     @Autowired
     private FileDao fileDao;
+    @Autowired
+    private Logger logger;
 
     public void setTypes() {
         InputStream inputStream = this.getClass().getResourceAsStream("/static/types.txt");
@@ -52,7 +55,8 @@ public class FileServiceImpl implements FileService {
             musicType = Arrays.asList(line.split("-"));
             this.loadType = true;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+
         }
     }
 
@@ -61,7 +65,8 @@ public class FileServiceImpl implements FileService {
         try {
             this.fileSystem = FileSystem.get(URI.create(myConfigure.getHdfsUrl()), configuration);
         } catch (IOException e) {
-            e.printStackTrace();
+
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
 
     }
@@ -78,7 +83,7 @@ public class FileServiceImpl implements FileService {
             fileSystem.copyToLocalFile(srcPath, distPath);
             file = new File(distFile);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return file;
     }
@@ -106,7 +111,7 @@ public class FileServiceImpl implements FileService {
             });
             return myFiles;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return null;
     }
@@ -118,7 +123,7 @@ public class FileServiceImpl implements FileService {
             fileSystem.copyFromLocalFile(new Path(myConfigure.getTemp() + srcUrl), new Path(myConfigure.getHdfsUrl() + distUrl));
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return false;
     }
@@ -136,7 +141,7 @@ public class FileServiceImpl implements FileService {
             fileSystem.mkdirs(new Path(myConfigure.getHdfsUrl() + dir));
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return false;
     }
@@ -151,7 +156,7 @@ public class FileServiceImpl implements FileService {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return false;
     }
@@ -166,7 +171,7 @@ public class FileServiceImpl implements FileService {
             fileSystem.mkdirs(new Path(myConfigure.getHdfsUrl() + dir));
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return false;
     }
@@ -190,7 +195,7 @@ public class FileServiceImpl implements FileService {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
     }
 
@@ -203,7 +208,7 @@ public class FileServiceImpl implements FileService {
             }
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return false;
     }
@@ -225,7 +230,7 @@ public class FileServiceImpl implements FileService {
                 return true;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return false;
     }
@@ -286,7 +291,7 @@ public class FileServiceImpl implements FileService {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
         return false;
     }

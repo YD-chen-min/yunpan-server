@@ -131,21 +131,7 @@ public class UserController {
         return ResultVOUtil.success("密码修改成功");
     }
 
-    @Transactional
-    @PostMapping("/user/delete")
-    @ResponseBody
-    public ResultVO deleteUser(@RequestParam("users") String users) {
-        String[] user = users.split(";");
-        int count = user.length;
-        int i = 0;
-        for (String u : user) {
-            UserInfo userInfo = userService.getUserInfoByUser(u);
-            fileService.deleteFiles(userInfo.getHdfs());
-            userService.deleteUser(u);
-            i++;
-        }
-        return ResultVOUtil.success(count + "条数据中，有" + i + "条数据及关联数据被彻底删除");
-    }
+
 
     @GetMapping("/user/exist")
     @ResponseBody
@@ -195,7 +181,7 @@ public class UserController {
         message += ";  影响数据库表<users>结果数目 : " + count;
         fileService.deleteFiles(user );
         fileService.deleteFiles("garbage/"+user);
-        logger.adminLogIn(admin, message);
+        logger.adminLogIn(message);
         return ResultVOUtil.success("success");
     }
 }

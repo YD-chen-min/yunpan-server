@@ -91,7 +91,7 @@ public class AdminController {
             return ResultVOUtil.fail(1,"参数错误");
         }
         adminService.modifyPassword(user,password);
-        logger.adminLogIn(user,"修改密码");
+        logger.adminLogIn("修改密码");
         return ResultVOUtil.success("密码修改成功");
     }
 }

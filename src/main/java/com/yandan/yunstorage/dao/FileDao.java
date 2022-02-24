@@ -19,7 +19,7 @@ public interface FileDao {
     List<MyFile> getFilesByType(@Param("rootType")String rootType,@Param("root")String root);
     @Delete("delete from files where url=#{url}")
     int deleteFiles(@Param("url")String url);
-    @Update("update files set name=#{newName},url=#{newUrl}where url=#{oldUrl}")
+    @Update("update files set name=#{newName},url=#{newUrl} where url=#{oldUrl}")
     int modifyFilesName(@Param("oldUrl")String oldUrl,@Param("newUrl")String newUrl,@Param("newName")String newName);
     @Update("update files set deleted = #{delete}  where url = #{url}")
     int setDelete(@Param("url")String url,@Param("delete")int delete);
@@ -40,6 +40,6 @@ public interface FileDao {
     int setDeleteByDir(@Param("dir")String dir,@Param("delete") int delete);
     @Delete("delete from files where url like #{dir}")
     int deleteFilesByDir(@Param("dir")String dir);
-    @Delete("delete from files where root=#{}")
+    @Delete("delete from files where root=#{root}")
     int deleteByRoot(@Param("root")String root);
 }

@@ -3,6 +3,7 @@ my-config:
   hostURL: D:\kkFileView-4.4\file\
   temp: D:\HDFSFile\
   log: D:\log\
+  hadoopJmxServerUrl : "http://192.168.164.110:50070"
 #  hostURL: /home/hdfsuser/
 spring:
   jpa:

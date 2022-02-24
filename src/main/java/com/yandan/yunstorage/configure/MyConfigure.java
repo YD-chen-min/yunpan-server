@@ -19,4 +19,6 @@ public class MyConfigure {
     private String temp;
     @Value("${my-config.log}")
     private String log;
+    @Value("${my-config.hadoopJmxServerUrl}")
+    private String hadoopJmxServerUrl;
 }

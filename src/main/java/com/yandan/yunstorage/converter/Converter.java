@@ -4,6 +4,7 @@ import com.yandan.yunstorage.VO.MyFile;
 import org.apache.hadoop.fs.FileStatus;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 
 /**
@@ -12,6 +13,7 @@ import java.text.SimpleDateFormat;
  */
 public class Converter {
     private static SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yyyy-MM-dd  HH:mm:ss");
+    private static DecimalFormat df   = new DecimalFormat("######0.00");
     public static MyFile fileStatus2File(FileStatus fileStatus, String hsdfUrl){
         if(!hsdfUrl.endsWith("/")) hsdfUrl+="/";
         MyFile myFile =new MyFile();
@@ -29,11 +31,11 @@ public class Converter {
         myFile.setUrl(fileStatus.getPath().toString());
         return myFile;
     }
-    public static String toSize(long size){
+    public static String toSize(double size){
         String sizeStr="";
         int level=0;
         while (size>1024){
-            size=size/1024;
+            size=size/1024.0;
             level++;
         }
         switch (level){
@@ -44,7 +46,8 @@ public class Converter {
             case 4: sizeStr="TB";break;
             case 5: sizeStr="PB";break;
         }
-        sizeStr=size+sizeStr;
+
+        sizeStr=df.format(size)+sizeStr;
         return sizeStr;
     }
     public static float toGB(long size){
