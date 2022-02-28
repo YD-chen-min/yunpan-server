@@ -1,18 +1,17 @@
 package com.yandan.yunstorage.dao;
 
 import com.yandan.yunstorage.data.AdminInfo;
-import com.yandan.yunstorage.data.UserInfo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 /**
  * Create by yandan
  * 2022/2/23  18:03
  */
-@Component
+@Repository
 @Mapper
 public interface AdminDao {
     @Select("select * from admin where tel=#{tel}")

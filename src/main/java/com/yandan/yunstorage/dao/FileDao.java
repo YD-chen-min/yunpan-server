@@ -2,7 +2,7 @@ package com.yandan.yunstorage.dao;
 
 import com.yandan.yunstorage.VO.MyFile;
 import org.apache.ibatis.annotations.*;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -10,7 +10,7 @@ import java.util.List;
  * Create by yandan
  * 2022/1/7  10:42
  */
-@Component
+@Repository
 @Mapper
 public interface FileDao {
     @Insert("insert into files(url,name,size,lastModifyTime,type,root,rootType,realSize) values(#{myFile.url},#{myFile.name},#{myFile.size},#{myFile.lastModifyTime},#{myFile.type},#{root},#{rootType},#{myFile.realSize}) ")

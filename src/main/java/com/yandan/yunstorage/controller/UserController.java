@@ -16,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
 /**
  * Create by yandan
@@ -36,7 +37,7 @@ public class UserController {
     @Transactional
     @PostMapping("/user/register")
     @ResponseBody
-    public ResultVO<UserInfo> register(@Validated UserForm userForm, BindingResult bindingResult, HttpServletRequest request) {
+    public ResultVO<UserInfo> register(@Validated UserForm userForm, BindingResult bindingResult, HttpServletRequest request) throws IOException {
         String ip = getIpAddr(request);
         if (bindingResult.hasErrors()) {
             return ResultVOUtil.fail(1, "参数错误");
@@ -170,7 +171,7 @@ public class UserController {
 
     @PostMapping("/user/delete")
     @ResponseBody
-    public ResultVO deleteUserByUser(HttpServletRequest httpServletRequest, @RequestParam("user") String user, @RequestParam("admin") String admin) {
+    public ResultVO deleteUserByUser(HttpServletRequest httpServletRequest, @RequestParam("user") String user, @RequestParam("admin") String admin) throws IOException {
         String ip = getIpAddr(httpServletRequest);
         AdminInfo adminInfo = adminDao.getUserByUser(admin);
         if (adminInfo == null) {

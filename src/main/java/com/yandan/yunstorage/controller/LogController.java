@@ -2,7 +2,6 @@ package com.yandan.yunstorage.controller;
 
 import com.yandan.yunstorage.VO.ResultVO;
 import com.yandan.yunstorage.configure.MyConfigure;
-import com.yandan.yunstorage.data.UserInfo;
 import com.yandan.yunstorage.util.Logger;
 import com.yandan.yunstorage.util.ResultVOUtil;
 import org.apache.commons.io.FileUtils;
@@ -11,14 +10,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.net.URLEncoder;
-import java.util.List;
 
 /**
  * Create by yandan

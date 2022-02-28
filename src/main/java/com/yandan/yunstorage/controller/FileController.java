@@ -6,7 +6,6 @@ import com.yandan.yunstorage.VO.ResultVO;
 import com.yandan.yunstorage.configure.MyConfigure;
 import com.yandan.yunstorage.converter.Converter;
 import com.yandan.yunstorage.data.UserInfo;
-import com.yandan.yunstorage.hadoop.HadoopUtil;
 import com.yandan.yunstorage.service.FileService;
 import com.yandan.yunstorage.service.UserService;
 import com.yandan.yunstorage.util.Logger;
@@ -23,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Base64;
 import java.util.Date;
@@ -73,7 +73,7 @@ public class FileController {
     @ResponseBody
     public ResultVO<List<MyFile>> getGFileList(@RequestParam(value = "path", defaultValue = "") String path,
                                                HttpServletRequest request,
-                                               @RequestParam(value = "user") String user) {
+                                               @RequestParam(value = "user") String user) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -88,7 +88,7 @@ public class FileController {
     @ResponseBody
     public ResultVO<List<MyFile>> getFileList(@RequestParam(value = "path", defaultValue = "") String path,
                                               HttpServletRequest request,
-                                              @RequestParam(value = "user") String user) {
+                                              @RequestParam(value = "user") String user) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -218,7 +218,7 @@ public class FileController {
     public ResultVO rename(@RequestParam("oldPath") String oldPath,
                            @RequestParam("newPath") String newPath,
                            HttpServletRequest request,
-                           @RequestParam(value = "user") String user) {
+                           @RequestParam(value = "user") String user) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -246,7 +246,7 @@ public class FileController {
     public ResultVO deleteFiles(HttpServletRequest request,
                                 @RequestParam(value = "user") String user,
                                 @RequestParam(value = "path") String path,
-                                @RequestParam(value = "files") String files) {
+                                @RequestParam(value = "files") String files) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -256,10 +256,11 @@ public class FileController {
         int i = 0;
         int count = file.length;
         for (String f : file) {
-            if (fileService.rename(path + f, "garbage/" + path + f))
+            f=f.replace(myConfigure.getHdfsUrl(),"");
+            if (fileService.rename(f , "garbage/"  + f))
                 i++;
             logger.userLogIn(user,f+"'  ---> 回收站");
-            fileService.setDeleteDatabaseFile(path + f, 1);
+            fileService.setDeleteDatabaseFile( f, 1);
         }
         return ResultVOUtil.success(count + "个文件，其中" + i + "个文件被删除");
     }
@@ -270,7 +271,7 @@ public class FileController {
     public ResultVO deleteGFiles(HttpServletRequest request,
                                  @RequestParam(value = "user") String user,
                                  @RequestParam(value = "path") String path,
-                                 @RequestParam(value = "files") String files) {
+                                 @RequestParam(value = "files") String files) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -306,7 +307,7 @@ public class FileController {
     public ResultVO deleteGFile(HttpServletRequest request,
                                 @RequestParam(value = "user") String user,
                                 @RequestParam(value = "path") String path,
-                                @RequestParam(value = "files") String files) {
+                                @RequestParam(value = "files") String files) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -332,7 +333,7 @@ public class FileController {
     @ResponseBody
     public ResultVO deleteGDir(HttpServletRequest request,
                                @RequestParam(value = "user") String user,
-                               @RequestParam(value = "path") String path) {
+                               @RequestParam(value = "path") String path) throws IOException {
         UserInfo userInfo = userService.getUserInfoByUser(user);
         String ip = getIpAddr(request);
         if (!ip.equals(userInfo.getIp())) {
@@ -359,7 +360,7 @@ public class FileController {
     @ResponseBody
     public ResultVO deleteDir(HttpServletRequest request,
                               @RequestParam(value = "user") String user,
-                              @RequestParam(value = "path") String path) {
+                              @RequestParam(value = "path") String path) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo=userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -377,7 +378,7 @@ public class FileController {
     @ResponseBody
     public ResultVO addDir(HttpServletRequest request,
                            @RequestParam(value = "user") String user,
-                           @RequestParam(value = "path") String path) {
+                           @RequestParam(value = "path") String path) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -397,7 +398,7 @@ public class FileController {
     public ResultVO move(HttpServletRequest request,
                          @RequestParam(value = "user") String user,
                          @RequestParam(value = "oldPath") String oldPath,
-                         @RequestParam(value = "newPath") String newPath) {
+                         @RequestParam(value = "newPath") String newPath) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -421,7 +422,7 @@ public class FileController {
     @ResponseBody
     public ResultVO<Node[]> getAllDir(@RequestParam("user") String user,
                                       @RequestParam("path") String path,
-                                      HttpServletRequest request) {
+                                      HttpServletRequest request) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -437,7 +438,7 @@ public class FileController {
     @ResponseBody
     public ResultVO<List<MyFile>> getFileListByType(@RequestParam("user") String user,
                                                     @RequestParam("type") String type,
-                                                    HttpServletRequest request) {
+                                                    HttpServletRequest request) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -453,7 +454,7 @@ public class FileController {
     public ResultVO deleteFiles(HttpServletRequest request,
                                 @RequestParam(value = "user") String user,
                                 @RequestParam(value = "url") String url
-    ) {
+    ) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -477,7 +478,7 @@ public class FileController {
     public ResultVO restoreFile(HttpServletRequest request,
                                 @RequestParam(value = "user") String user,
                                 @RequestParam(value = "url") String url
-    ) {
+    ) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -499,7 +500,7 @@ public class FileController {
     public ResultVO restoreFiles(HttpServletRequest request,
                                  @RequestParam(value = "user") String user,
                                  @RequestParam(value = "url") String url
-    ) {
+    ) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
@@ -525,7 +526,7 @@ public class FileController {
     @PostMapping("file/online")
     @ResponseBody
     public ResultVO online(HttpServletRequest request, @RequestParam("path") String path,
-                           @RequestParam(value = "user") String user) {
+                           @RequestParam(value = "user") String user) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {

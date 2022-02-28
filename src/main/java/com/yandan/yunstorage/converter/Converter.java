@@ -3,7 +3,6 @@ package com.yandan.yunstorage.converter;
 import com.yandan.yunstorage.VO.MyFile;
 import org.apache.hadoop.fs.FileStatus;
 
-import java.io.File;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 

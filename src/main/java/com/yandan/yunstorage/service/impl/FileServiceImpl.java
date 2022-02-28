@@ -41,95 +41,85 @@ public class FileServiceImpl implements FileService {
     @Autowired
     private Logger logger;
 
-    public void setTypes() {
+    public void setTypes() throws IOException {
         InputStream inputStream = this.getClass().getResourceAsStream("/static/types.txt");
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-        try {
-            String line = bufferedReader.readLine();
-            picType = Arrays.asList(line.split("-"));
-            line = bufferedReader.readLine();
-            videoType = Arrays.asList(line.split("-"));
-            line = bufferedReader.readLine();
-            docType = Arrays.asList(line.split("-"));
-            line = bufferedReader.readLine();
-            musicType = Arrays.asList(line.split("-"));
-            this.loadType = true;
-        } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
 
-        }
+        String line = bufferedReader.readLine();
+        picType = Arrays.asList(line.split("-"));
+        line = bufferedReader.readLine();
+        videoType = Arrays.asList(line.split("-"));
+        line = bufferedReader.readLine();
+        docType = Arrays.asList(line.split("-"));
+        line = bufferedReader.readLine();
+        musicType = Arrays.asList(line.split("-"));
+        this.loadType = true;
+
     }
 
-    public void setFileSystem() {
+    public void setFileSystem() throws IOException {
         Configuration configuration = new Configuration();
-        try {
-            this.fileSystem = FileSystem.get(URI.create(myConfigure.getHdfsUrl()), configuration);
-        } catch (IOException e) {
 
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
-        }
+        this.fileSystem = FileSystem.get(URI.create(myConfigure.getHdfsUrl()), configuration);
+
 
     }
 
     @Override
-    public File getFile(String path) {
+    public File getFile(String path) throws IOException {
         if (fileSystem == null) setFileSystem();
         String distFile = myConfigure.getTemp() + path.replace("/", "\\");
         String srcFile = myConfigure.getHdfsUrl() + path;
         Path srcPath = new Path(srcFile);
         Path distPath = new Path(distFile);
         File file = null;
-        try {
-            fileSystem.copyToLocalFile(srcPath, distPath);
-            file = new File(distFile);
-        } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
-        }
+
+        fileSystem.copyToLocalFile(srcPath, distPath);
+        file = new File(distFile);
+
         return file;
     }
 
     @Override
-    public List<MyFile> getMyFiles(String path) {
+    public List<MyFile> getMyFiles(String path) throws IOException {
         if (fileSystem == null) setFileSystem();
-        try {
-            FileStatus[] fileStatuses = fileSystem.listStatus(new Path(myConfigure.getHdfsUrl() + path));
-            List<MyFile> myFiles = new ArrayList<MyFile>();
-            for (FileStatus fileStatus : fileStatuses) {
-                myFiles.add(Converter.fileStatus2File(fileStatus, myConfigure.getHdfsUrl() + path));
-            }
-            myFiles.sort(new Comparator<MyFile>() {
-                @Override
-                public int compare(MyFile o1, MyFile o2) {
-                    if (o1.getType().equals("dir") && o2.getType().equals("dir"))
-                        return 0;
-                    if (o1.getType().equals("dir"))
-                        return -1;
-                    if (o2.getType().equals("dir"))
-                        return 1;
-                    return 0;
-                }
-            });
-            return myFiles;
-        } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+
+        FileStatus[] fileStatuses = fileSystem.listStatus(new Path(myConfigure.getHdfsUrl() + path));
+        List<MyFile> myFiles = new ArrayList<MyFile>();
+        for (FileStatus fileStatus : fileStatuses) {
+            myFiles.add(Converter.fileStatus2File(fileStatus, myConfigure.getHdfsUrl() + path));
         }
-        return null;
+        myFiles.sort(new Comparator<MyFile>() {
+            @Override
+            public int compare(MyFile o1, MyFile o2) {
+                if (o1.getType().equals("dir") && o2.getType().equals("dir"))
+                    return 0;
+                if (o1.getType().equals("dir"))
+                    return -1;
+                if (o2.getType().equals("dir"))
+                    return 1;
+                return 0;
+            }
+        });
+        return myFiles;
+
+
     }
 
     @Override
-    public boolean uploadFile(String srcUrl, String distUrl) {
+    public boolean uploadFile(String srcUrl, String distUrl) throws IOException {
         if (fileSystem == null) setFileSystem();
         try {
             fileSystem.copyFromLocalFile(new Path(myConfigure.getTemp() + srcUrl), new Path(myConfigure.getHdfsUrl() + distUrl));
             return true;
         } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+            logger.errorLogIn(e.getMessage(), e.getStackTrace());
         }
         return false;
     }
 
     @Override
-    public boolean mkDir(String dir) {
+    public boolean mkDir(String dir) throws IOException {
         if (fileSystem == null) setFileSystem();
         File file = new File(myConfigure.getTemp() + dir);
         if (!file.exists())
@@ -141,13 +131,13 @@ public class FileServiceImpl implements FileService {
             fileSystem.mkdirs(new Path(myConfigure.getHdfsUrl() + dir));
             return true;
         } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+            logger.errorLogIn(e.getMessage(), e.getStackTrace());
         }
         return false;
     }
 
     @Override
-    public boolean deleteFile(String path) {
+    public boolean deleteFile(String path) throws IOException {
         if (fileSystem == null) setFileSystem();
         try {
             if (fileSystem.exists(new Path(myConfigure.getHdfsUrl() + path))) {
@@ -156,13 +146,13 @@ public class FileServiceImpl implements FileService {
             }
 
         } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+            logger.errorLogIn(e.getMessage(), e.getStackTrace());
         }
         return false;
     }
 
     @Override
-    public boolean mkGDir(String dir) {
+    public boolean mkGDir(String dir) throws IOException {
         if (fileSystem == null) setFileSystem();
         try {
             if (fileSystem.exists(new Path(myConfigure.getHdfsUrl() + dir))) {
@@ -171,36 +161,34 @@ public class FileServiceImpl implements FileService {
             fileSystem.mkdirs(new Path(myConfigure.getHdfsUrl() + dir));
             return true;
         } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+            logger.errorLogIn(e.getMessage(), e.getStackTrace());
         }
         return false;
     }
 
     @Override
-    public void getDir(String path, Node node) {
+    public void getDir(String path, Node node) throws IOException {
         if (fileSystem == null) setFileSystem();
-        try {
-            if (fileSystem.exists(new Path(myConfigure.getHdfsUrl() + path))) {
-                FileStatus[] fileStatuses = fileSystem.listStatus(new Path(myConfigure.getHdfsUrl() + path));
-                for (FileStatus fs : fileStatuses) {
-                    if (fs.isDirectory()) {
-                        if (node.getChildren() == null)
-                            node.setChildren(new ArrayList<Node>());
-                        MyFile myFile = Converter.fileStatus2File(fs, myConfigure.getHdfsUrl() + path);
-                        Node node1 = new Node(myFile.getName());
-                        node.getChildren().add(node1);
-                        getDir(path + myFile.getName() + "/", node1);
-                    }
 
+        if (fileSystem.exists(new Path(myConfigure.getHdfsUrl() + path))) {
+            FileStatus[] fileStatuses = fileSystem.listStatus(new Path(myConfigure.getHdfsUrl() + path));
+            for (FileStatus fs : fileStatuses) {
+                if (fs.isDirectory()) {
+                    if (node.getChildren() == null)
+                        node.setChildren(new ArrayList<Node>());
+                    MyFile myFile = Converter.fileStatus2File(fs, myConfigure.getHdfsUrl() + path);
+                    Node node1 = new Node(myFile.getName());
+                    node.getChildren().add(node1);
+                    getDir(path + myFile.getName() + "/", node1);
                 }
+
             }
-        } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
         }
+
     }
 
     @Override
-    public boolean deleteFiles(String path) {
+    public boolean deleteFiles(String path) throws IOException {
         if (fileSystem == null) setFileSystem();
         try {
             if (fileSystem.exists(new Path(myConfigure.getHdfsUrl() + path))) {
@@ -208,42 +196,40 @@ public class FileServiceImpl implements FileService {
             }
             return true;
         } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+            logger.errorLogIn(e.getMessage(), e.getStackTrace());
         }
         return false;
     }
 
     @Override
-    public boolean rename(String path, String newName) {
+    public boolean rename(String path, String newName) throws IOException {
         if (fileSystem == null) setFileSystem();
         Path oldPath = new Path(myConfigure.getHdfsUrl() + path);
         Path newPath = new Path((myConfigure.getHdfsUrl() + newName));
-        String dir=newName.substring(0,newName.lastIndexOf("/"));
-        Path dirPath=new Path(myConfigure.getHdfsUrl()+dir);
-        try {
-            if (fileSystem.exists(oldPath) && !fileSystem.exists(newPath)) {
-                if(!fileSystem.exists(dirPath)&&!fileSystem.isDirectory(dirPath)){
-                    fileSystem.mkdirs(dirPath);
+        String dir = newName.substring(0, newName.lastIndexOf("/"));
+        Path dirPath = new Path(myConfigure.getHdfsUrl() + dir);
 
-                }
-                fileSystem.rename(oldPath, newPath);
-                return true;
+        if (fileSystem.exists(oldPath) && !fileSystem.exists(newPath)) {
+            if (!fileSystem.exists(dirPath) && !fileSystem.isDirectory(dirPath)) {
+                fileSystem.mkdirs(dirPath);
+
             }
-        } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+            fileSystem.rename(oldPath, newPath);
+            return true;
         }
+
         return false;
     }
 
     @Override
-    public List<MyFile> getFilesByType(String rootPath, String type) {
+    public List<MyFile> getFilesByType(String rootPath, String type) throws IOException {
         if (this.loadType == false) setTypes();
         List<MyFile> myFiles = fileDao.getFilesByType(type, rootPath);
         return myFiles;
     }
 
     @Override
-    public boolean insertFile(String rootPath, MyFile myFile) {
+    public boolean insertFile(String rootPath, MyFile myFile) throws IOException {
         if (this.loadType == false) setTypes();
         String rootType = "unknown";
         if (picType.contains(myFile.getType()))
@@ -259,19 +245,19 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public int deleteDatabaseFile(String url) {
+    public int deleteDatabaseFile(String url) throws IOException {
         if (this.loadType == false) setTypes();
         return fileDao.deleteFiles(url);
     }
 
     @Override
-    public int setDeleteDatabaseFile(String url,int delete) {
+    public int setDeleteDatabaseFile(String url, int delete) throws IOException {
         if (this.loadType == false) setTypes();
-        return fileDao.setDelete(url,delete);
+        return fileDao.setDelete(url, delete);
     }
 
     @Override
-    public int modifyFileName(String oldUrl, String newUrl, String newName) {
+    public int modifyFileName(String oldUrl, String newUrl, String newName) throws IOException {
         if (this.loadType == false) setTypes();
         return fileDao.modifyFilesName(oldUrl, newUrl, newName);
     }
@@ -282,7 +268,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean deleteFileByUrl(String url) {
+    public boolean deleteFileByUrl(String url) throws IOException {
         if (fileSystem == null) setFileSystem();
         try {
             if (fileSystem.exists(new Path(myConfigure.getHdfsUrl() + url))) {
@@ -291,38 +277,36 @@ public class FileServiceImpl implements FileService {
             }
 
         } catch (IOException e) {
-            logger.errorLogIn(e.getMessage(),e.getStackTrace());
+            logger.errorLogIn(e.getMessage(), e.getStackTrace());
         }
         return false;
     }
 
     @Override
-    public String fileLocaled(String url) {
+    public String fileLocaled(String url) throws IOException {
         if (fileSystem == null) setFileSystem();
-        try {
-            String distFile = myConfigure.getHostUrl() + url.replace(myConfigure.getHdfsUrl(), "").replace("/", "\\");
-            String srcFile = url;
-            String dir = distFile.substring(0, distFile.lastIndexOf("\\"));
-            Path srcPath = new Path(srcFile);
-            Path distPath = new Path(distFile);
-            File file = new File(dir);
-            if (!file.exists()) file.mkdirs();
-            if (fileSystem.exists(new Path(url))) {
-                File file1 = new File(distFile);
-                if (!file1.exists()) {
-                    fileSystem.copyToLocalFile(srcPath, distPath);
-                }
-                return url.replace(myConfigure.getHdfsUrl(), "");
+
+        String distFile = myConfigure.getHostUrl() + url.replace(myConfigure.getHdfsUrl(), "").replace("/", "\\");
+        String srcFile = url;
+        String dir = distFile.substring(0, distFile.lastIndexOf("\\"));
+        Path srcPath = new Path(srcFile);
+        Path distPath = new Path(distFile);
+        File file = new File(dir);
+        if (!file.exists()) file.mkdirs();
+        if (fileSystem.exists(new Path(url))) {
+            File file1 = new File(distFile);
+            if (!file1.exists()) {
+                fileSystem.copyToLocalFile(srcPath, distPath);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+            return url.replace(myConfigure.getHdfsUrl(), "");
         }
+
         return null;
     }
 
     @Override
     public Float getMyFilesByDir(String url) {
-        return fileDao.getFilesSizeByDir(url+"%%");
+        return fileDao.getFilesSizeByDir(url + "%%");
     }
 
     @Override
@@ -332,12 +316,12 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public void setDownloadCount(String url, int count) {
-        fileDao.updateCount(url,count);
+        fileDao.updateCount(url, count);
     }
 
     @Override
     public void setShare(String url, int share) {
-        fileDao.updateIsShare(url,share);
+        fileDao.updateIsShare(url, share);
     }
 
     @Override
@@ -347,7 +331,7 @@ public class FileServiceImpl implements FileService {
 
     @Override
     public void setDeleteByDir(String dir, int delete) {
-        fileDao.setDeleteByDir(dir,delete);
+        fileDao.setDeleteByDir(dir, delete);
     }
 
     @Override

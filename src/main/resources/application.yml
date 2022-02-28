@@ -10,6 +10,8 @@ my-config:
   userName: "墨家云盘"
 #  hostURL: /home/hdfsuser/
 spring:
+  aop:
+    auto: true
   jpa:
     show-sql: true
   datasource:
@@ -17,11 +19,6 @@ spring:
     url: jdbc:mysql://hadoop01:3306/test?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&characterEncoding=utf-8
     username: root
     password: daian0401
-  mvc:
-    view:
-      prefix: /WEB-INF/
-      suffix: .jsp
-    static-path-pattern: /**
   resources:
     static-locations: classpath:/
   servlet:

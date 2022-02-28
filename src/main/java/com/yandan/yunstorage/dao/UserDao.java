@@ -3,8 +3,7 @@ package com.yandan.yunstorage.dao;
 import com.yandan.yunstorage.data.UserForm;
 import com.yandan.yunstorage.data.UserInfo;
 import org.apache.ibatis.annotations.*;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -12,7 +11,7 @@ import java.util.List;
  * Create by yandan
  * 2021/12/30  15:56
  */
-@Component
+@Repository
 @Mapper
 public interface UserDao {
     @Insert("insert into user(user,name,tel,email,password,ip) values(#{user},#{name}," +
