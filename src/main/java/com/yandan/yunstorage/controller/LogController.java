@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,7 +43,7 @@ public class LogController {
     public  ResultVO getErrorLog(){
         return ResultVOUtil.success(logger.errorLogOut());
     }
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @RequestMapping(value = "/log/user/download")
     public ResponseEntity<byte[]> downloadUserLog(@RequestParam(value = "user") String user) throws Exception {
 
@@ -61,7 +62,7 @@ public class LogController {
         logger.userLogIn(user,"下载日志 ");
         return responseEntity;
     }
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @RequestMapping("/log/admin/download")
     public ResponseEntity<byte[]> downloadAdminLog() throws Exception {
 
@@ -80,7 +81,7 @@ public class LogController {
         logger.adminLogIn("下载日志 ");
         return responseEntity;
     }
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @RequestMapping("/log/error/download")
     public ResponseEntity<byte[]> downloadErrorLog() throws Exception {
 

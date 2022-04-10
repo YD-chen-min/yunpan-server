@@ -32,8 +32,8 @@ public interface FileDao {
 
     @Update("update files set downloadCount=#{count} where url=#{url}")
     int updateCount(@Param("url")String ur,@Param("count")int count );
-    @Update("update files set isShare=#{share} where url=#{url}")
-    int updateIsShare(@Param("url")String url,@Param("share")int share);
+    @Update("update files set isShare=#{share},shareCode=#{shareCode} where url=#{url}")
+    int updateIsShare(@Param("url")String url,@Param("share")int share,@Param("shareCode")String shareCode);
     @Select("select * from files where root=#{root} and isShare=1")
     List<MyFile> getShareFiles(@Param("root")String root);
     @Update("update files set deleted = #{delete}  where url like #{dir}")

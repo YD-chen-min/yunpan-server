@@ -18,10 +18,10 @@ public interface UserDao {
             "#{tel},#{email},#{password},#{ip})")
     int insertUser(UserForm userForm);
 
-    @Select("select * from user where tel=#{tel}")
+    @Select("select user,name,tel,email,password,ip,store,busy from user where tel=#{tel}")
     UserInfo getUserByTel(@Param("tel") String tel);
 
-    @Select("select * from user where user=#{user}")
+    @Select("select user,name,tel,email,password,ip,store,busy from user where user=#{user}")
     UserInfo getUserByUser(@Param("user") String user);
 
     @Select("select hdfs from userAndhdfsUrl where user=#{user}")
@@ -41,10 +41,10 @@ public interface UserDao {
     int updateUserMac(@Param("user")String user,@Param("ip")String ip);
     @Update("update user set busy=#{size} where user=#{user}")
     int setUserBusy(@Param("user")String user,@Param("size")float size);
-    @Select("select * from user")
-    List<UserInfo> getUsers();
-    @Select("select * from user where user like #{user}")
-    List<UserInfo> getUsersLikeUser(@Param("user")String user);
+    @Select("select user,name,tel,email,ip,store,busy  from user limit #{start},#{size}")
+    List<UserInfo> getUsers(@Param("start")int start,@Param("size")int size);
+    @Select("select user,name,tel,email,ip,store,busy from user where user like #{user} limit #{start},#{size}")
+    List<UserInfo> getUsersLikeUser(@Param("user")String user,@Param("start")int start,@Param("size")int size);
     @Delete("delete from user where user = #{user}")
     int deleteByUser(@Param("user")String user);
 

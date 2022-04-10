@@ -161,7 +161,7 @@ public interface FileService {
      * @param url
      * @param share
      */
-    void setShare(String url,int share);
+    void setShare(String url,int share,String shareCode);
 
     /**
      * 获取分享文件列表
@@ -190,4 +190,12 @@ public interface FileService {
      * @return
      */
     int deleteDataBaseFileByRoot(String root);
+
+    /**
+     * 将hdfs上文件转存（复制）到另一个用户下
+     * @param src
+     * @param dest
+     * @return
+     */
+    boolean saveToOther(String src,String dest,String rootPath) throws IOException;
 }

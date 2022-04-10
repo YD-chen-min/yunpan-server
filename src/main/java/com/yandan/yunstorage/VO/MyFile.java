@@ -16,4 +16,5 @@ public class MyFile {
     private long realSize;
     private  int isShare;
     private int downloadCount;
+    private String shareCode;
 }

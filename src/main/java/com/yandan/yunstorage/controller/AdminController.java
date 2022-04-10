@@ -7,6 +7,7 @@ import com.yandan.yunstorage.service.AdminService;
 import com.yandan.yunstorage.util.Logger;
 import com.yandan.yunstorage.util.ResultVOUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,7 +46,7 @@ public class AdminController {
 //        }
         return ip;
     }
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @PostMapping("/admin/login")
     @ResponseBody
     public ResultVO<UserInfo> login(@RequestParam(value = "user",defaultValue = "") String user, HttpServletRequest request,
@@ -80,7 +81,7 @@ public class AdminController {
         }
         return ResultVOUtil.fail(1,"账号或密码错误");
     }
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @PostMapping("/admin/modify/password")
     @ResponseBody
     public ResultVO modifyPassword(@RequestParam(value = "user",defaultValue="")String user,@RequestParam(value = "password",defaultValue = "")String password){

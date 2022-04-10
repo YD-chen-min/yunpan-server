@@ -320,8 +320,8 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public void setShare(String url, int share) {
-        fileDao.updateIsShare(url, share);
+    public void setShare(String url, int share,String shareCode) {
+        fileDao.updateIsShare(url, share,shareCode);
     }
 
     @Override
@@ -342,5 +342,26 @@ public class FileServiceImpl implements FileService {
     @Override
     public int deleteDataBaseFileByRoot(String root) {
         return fileDao.deleteByRoot(root);
+    }
+
+    @Override
+    public boolean saveToOther(String src, String dest,String rootPath) throws IOException {
+        if (fileSystem==null) setFileSystem();
+        Path srcPath=new Path(myConfigure.getHdfsUrl()+src);
+        Path  destPath=new Path(myConfigure.getTemp()+dest);
+        if(fileSystem.exists(srcPath)){
+            fileSystem.copyToLocalFile(srcPath,destPath);
+            fileSystem.copyFromLocalFile(true,destPath,new Path(myConfigure.getHdfsUrl()+dest));
+            MyFile myFile=fileDao.getFile(src);
+           if(myFile!=null){
+               myFile.setUrl(dest);
+               myFile.setShareCode("");
+               myFile.setIsShare(0);
+               myFile.setDownloadCount(0);
+               insertFile(rootPath,myFile);
+           }
+            return true;
+        }
+        return false;
     }
 }

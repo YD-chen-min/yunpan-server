@@ -22,5 +22,6 @@ public class ErrorLogAspect {
     @AfterThrowing(pointcut = "controllerLog()",throwing = "e")
     public void doAfterThrowing(JoinPoint joinPoint,Exception e){
         logger.errorLogIn(e.getMessage(),e.getStackTrace());
+
     }
 }

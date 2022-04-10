@@ -5,7 +5,9 @@ import com.yandan.yunstorage.VO.Node;
 import com.yandan.yunstorage.VO.ResultVO;
 import com.yandan.yunstorage.configure.MyConfigure;
 import com.yandan.yunstorage.converter.Converter;
+import com.yandan.yunstorage.data.Dir;
 import com.yandan.yunstorage.data.UserInfo;
+import com.yandan.yunstorage.service.DirService;
 import com.yandan.yunstorage.service.FileService;
 import com.yandan.yunstorage.service.UserService;
 import com.yandan.yunstorage.util.Logger;
@@ -16,17 +18,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.POST;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.Base64;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Create by yandan
@@ -42,7 +44,8 @@ public class FileController {
     private MyConfigure myConfigure;
     @Autowired
     private Logger logger;
-
+    @Autowired
+    private DirService dirService;
 
     /**
      * 获取登录用户IP地址
@@ -88,47 +91,73 @@ public class FileController {
     @ResponseBody
     public ResultVO<List<MyFile>> getFileList(@RequestParam(value = "path", defaultValue = "") String path,
                                               HttpServletRequest request,
-                                              @RequestParam(value = "user") String user) throws IOException {
+                                              @RequestParam(value = "user") String user,
+                                              @RequestParam(value = "shareDir",defaultValue = "")String shareDir) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
-        if (!ip.equals(userInfo.getIp())) {
-            return ResultVOUtil.fail(1, "无权限访问");
+        List<Dir> dirs=null;
+        if(!"".equals(shareDir)){
+            dirs=dirService.getLikeUrl(shareDir);
         }
+        if(dirs!=null&&dirs.size()>0){
+
+        }else{
+            if (!ip.equals(userInfo.getIp())) {
+                return ResultVOUtil.fail(1, "无权限访问");
+            }
+        }
+
         List<MyFile> myFiles = fileService.getMyFiles(path);
         return ResultVOUtil.success(myFiles);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @RequestMapping(value = "/file/download")
     public ResponseEntity<byte[]> download(HttpServletRequest request, @RequestParam("path") String path,
-                                           @RequestParam(value = "user") String user)
+                                           @RequestParam(value = "user") String user,
+                                           @RequestParam(value = "shareDir",defaultValue = "")String shareDir)
             throws Exception {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
-        if (!ip.equals(userInfo.getIp())) {
-            return null;
+        List<Dir> dirs=null;
+        if(!"".equals(shareDir)){
+            dirs=dirService.getLikeUrl(shareDir);
         }
-        File file = fileService.getFile(path);
-        String name = path.split("/")[path.split("/").length - 1];
-        logger.userLogIn(user,"下载文件   '"+name+"'");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.setContentDispositionFormData("attachment",
-                URLEncoder.encode(name, "UTF-8"));
-        ResponseEntity<byte[]> responseEntity = new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file), headers, HttpStatus.OK);
-        file.delete();//删除本地文件
-        return responseEntity;
+
+        if(dirs!=null&&dirs.size()>0){
+
+        }else{
+            if (!ip.equals(userInfo.getIp())) {
+                return null;
+            }
+        }
+        for(Dir dir:dirs){
+            if(path.startsWith(dir.getUrl())){
+                File file = fileService.getFile(path);
+                String name = path.split("/")[path.split("/").length - 1];
+                logger.userLogIn(user,"下载文件   '"+name+"'");
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+                headers.setContentDispositionFormData("attachment",
+                        URLEncoder.encode(name, "UTF-8"));
+                ResponseEntity<byte[]> responseEntity = new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file), headers, HttpStatus.OK);
+                file.delete();//删除本地文件
+                return responseEntity;
+            }
+        }
+        return null;
+
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @RequestMapping(value = "/file/share/download")
     public ResponseEntity<byte[]> downloadShare(HttpServletRequest request, @RequestParam("path") String path,@RequestParam("user")String user
                                        )
             throws Exception {
 
 
-        byte[] p=Base64.getDecoder().decode(path);
-        path=new String(p);
+        byte[] p=Base64.getDecoder().decode(path.replace(" ","+"));
+        path=new String(p).substring(1);
         path=path.replace(myConfigure.getHdfsUrl(),"");
         File file = fileService.getFile(path);
         MyFile myFile=fileService.getMyFile(path);
@@ -151,7 +180,7 @@ public class FileController {
 
     }
 
-    @javax.transaction.Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @PostMapping(value = "/file/upload")
     @ResponseBody
     public ResultVO upload(@RequestParam("file") MultipartFile file,
@@ -212,7 +241,7 @@ public class FileController {
         return ResultVOUtil.success("上传成功！");
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/file/rename")
     @ResponseBody
     public ResultVO rename(@RequestParam("oldPath") String oldPath,
@@ -240,7 +269,7 @@ public class FileController {
 
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/file/deleteFiles")
     @ResponseBody
     public ResultVO deleteFiles(HttpServletRequest request,
@@ -265,7 +294,7 @@ public class FileController {
         return ResultVOUtil.success(count + "个文件，其中" + i + "个文件被删除");
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/file/garbage/deleteFiles")
     @ResponseBody
     public ResultVO deleteGFiles(HttpServletRequest request,
@@ -301,7 +330,7 @@ public class FileController {
         return ResultVOUtil.success(count + "个文件，其中" + i + "个文件被删除");
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/file/garbage/deleteFile")
     @ResponseBody
     public ResultVO deleteGFile(HttpServletRequest request,
@@ -328,7 +357,7 @@ public class FileController {
     }
 
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/file/garbage/deleteDri")
     @ResponseBody
     public ResultVO deleteGDir(HttpServletRequest request,
@@ -355,7 +384,7 @@ public class FileController {
         return ResultVOUtil.success("删除成功");
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/file/deleteDri")
     @ResponseBody
     public ResultVO deleteDir(HttpServletRequest request,
@@ -373,7 +402,7 @@ public class FileController {
         return ResultVOUtil.success("删除成功");
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @PostMapping("/add/dir")
     @ResponseBody
     public ResultVO addDir(HttpServletRequest request,
@@ -392,7 +421,7 @@ public class FileController {
 
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/file/move")
     @ResponseBody
     public ResultVO move(HttpServletRequest request,
@@ -417,7 +446,7 @@ public class FileController {
         return ResultVOUtil.success("移动成功");
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("file/dir/get/all")
     @ResponseBody
     public ResultVO<Node[]> getAllDir(@RequestParam("user") String user,
@@ -448,7 +477,7 @@ public class FileController {
         return ResultVOUtil.success(files);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/file/deleteFile")
     @ResponseBody
     public ResultVO deleteFiles(HttpServletRequest request,
@@ -472,7 +501,7 @@ public class FileController {
         return ResultVOUtil.success(count + "个文件，其中" + i + "个文件被删除");
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/restore/file")
     @ResponseBody
     public ResultVO restoreFile(HttpServletRequest request,
@@ -494,7 +523,7 @@ public class FileController {
         return ResultVOUtil.fail(1, "还原失败！");
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/restore/files")
     @ResponseBody
     public ResultVO restoreFiles(HttpServletRequest request,
@@ -535,19 +564,23 @@ public class FileController {
         return ResultVOUtil.success(fileService.fileLocaled(path));
 
     }
-
+    @Transactional(propagation =Propagation.REQUIRED)
     @PostMapping("share/file")
     @ResponseBody
-    public ResultVO shareFile(HttpServletRequest request,@RequestParam("url") String url,
+    public ResultVO shareFile(HttpServletRequest request,@RequestParam("urls[]") List<String> urls,
                               @RequestParam(value = "user") String user){
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
         if (!ip.equals(userInfo.getIp())) {
             return ResultVOUtil.fail(1, "无权限访问");
         }
-        url=url.replace(myConfigure.getHdfsUrl(),"");
-        fileService.setShare(url,1);
-        logger.userLogIn(user,"共享文件  '"+url.replace(user+"/","")+"'");
+        for(String url:urls){
+            String shareCode="0"+url;
+            shareCode=Base64.getEncoder().encodeToString(shareCode.getBytes());
+            url=url.replace(myConfigure.getHdfsUrl(),"");
+            fileService.setShare(url,1,shareCode);
+            logger.userLogIn(user,"共享文件  '"+url.replace(user+"/","")+"'");
+        }
         return ResultVOUtil.success("ok");
     }
 
@@ -563,6 +596,7 @@ public class FileController {
         List<MyFile> myFiles=fileService.getShareFileList(user+"/");
         return ResultVOUtil.success(myFiles);
     }
+    @Transactional(propagation = Propagation.REQUIRED)
     @PostMapping("share/cancel")
     @ResponseBody
     public ResultVO cancelShare(HttpServletRequest request,
@@ -573,8 +607,120 @@ public class FileController {
         if (!ip.equals(userInfo.getIp())) {
             return ResultVOUtil.fail(1, "无权限访问");
         }
-        fileService.setShare(url,0);
+        fileService.setShare(url,0,"");
         logger.userLogIn(user,"文件  '"+url.replace(user+"/","")+"'  取消共享");
         return ResultVOUtil.success("取消成功！");
     }
+    @Transactional(propagation = Propagation.REQUIRED)
+    @PostMapping("share/dir")
+    @ResponseBody
+    public  ResultVO shareDir(HttpServletRequest request,
+                              @RequestParam(value = "user") String user,
+                              @RequestParam(value = "urls[]")List<String> urls){
+        String ip = getIpAddr(request);
+        UserInfo userInfo = userService.getUserInfoByUser(user);
+        if (!ip.equals(userInfo.getIp())) {
+            return ResultVOUtil.fail(1, "无权限访问");
+        }
+        ArrayList<Dir> dirs=new ArrayList<>();
+        for(String url:urls){
+            String shareCode="1"+url;
+            shareCode=Base64.getEncoder().encodeToString(shareCode.getBytes());
+            url=url.replace(myConfigure.getHdfsUrl(),"");
+            Dir dir=new Dir();
+            dir.setIsShare(1);
+            dir.setRoot(user+"/");
+            dir.setUrl(url);
+            dir.setViewCount(0);
+            dir.setShareCode(shareCode);
+            dirs.add(dir);
+        }
+
+        int count=0;
+        count+=dirService.addDir(dirs);
+        for(String url:urls){
+            logger.userLogIn(user,"共享目录  '"+url.replace(user+"/","")+"'");
+        }
+
+        return count==0? ResultVOUtil.fail(1,"分享失败"):ResultVOUtil.success("分享成功");
+
+    }
+    @Transactional(propagation = Propagation.REQUIRED)
+    @PostMapping("share/dir/cancel")
+    @ResponseBody
+    public ResultVO cancelDirShare(HttpServletRequest request,
+                                   @RequestParam(value = "user") String user,
+                                   @RequestParam(value = "url")String url){
+        String ip = getIpAddr(request);
+        UserInfo userInfo = userService.getUserInfoByUser(user);
+        if (!ip.equals(userInfo.getIp())) {
+            return ResultVOUtil.fail(1, "无权限访问");
+        }
+        int count=0;
+        count+=dirService.deleteByUrl(Arrays.asList(url));
+        logger.userLogIn(user,"目录  '"+url.replace(user+"/","")+"'  取消共享");
+        return count==0? ResultVOUtil.fail(1,"修改失败"):ResultVOUtil.success("修改成功");
+    }
+    @GetMapping("share/dir/getList")
+    @ResponseBody
+    public ResultVO<List<MyFile>> getShareDirList(HttpServletRequest request,
+                                               @RequestParam(value = "user") String user){
+        String ip = getIpAddr(request);
+        UserInfo userInfo = userService.getUserInfoByUser(user);
+        if (!ip.equals(userInfo.getIp())) {
+            return ResultVOUtil.fail(1, "无权限访问");
+        }
+        List<Dir> list=null;
+        list=dirService.getByRoot(user+"/");
+        ArrayList<MyFile> myFiles=new ArrayList<>();
+        for(Dir dir:list){
+            MyFile myFile=new MyFile();
+            myFile.setUrl(dir.getUrl());
+            myFile.setName(dir.getUrl().substring(dir.getUrl().lastIndexOf('/')+1));
+            myFile.setType("dir");
+            myFile.setDownloadCount(dir.getViewCount());
+            myFile.setShareCode(dir.getShareCode());
+            myFiles.add(myFile);
+        }
+        return ResultVOUtil.success(myFiles);
+    }
+    @Transactional(propagation = Propagation.REQUIRED)
+    @PostMapping("share/dir/get")
+    @ResponseBody
+    public ResultVO<List<MyFile>> getShareDir(@RequestParam("url")String url) throws IOException {
+        url=url.replace(" ","+");
+        byte[] p=Base64.getDecoder().decode(url);
+        url=new String(p);
+        url=url.replace("1"+myConfigure.getHdfsUrl(),"");
+        Dir dir=dirService.getByUrl(url);
+        if(dir==null)
+            return ResultVOUtil.fail(1,"无权限访问");
+        List<MyFile> myFiles=null;
+        myFiles=fileService.getMyFiles(url);
+        dirService.updateViewCount(url);
+        return ResultVOUtil.success(myFiles);
+    }
+    @Transactional(propagation = Propagation.REQUIRED)
+    @PostMapping("share/save")
+    @ResponseBody
+    public ResultVO saveShare(@RequestParam( "urls[]")List<String> urls,
+                              @RequestParam("user")String user,
+                              @RequestParam("dest")String dest,
+                              @RequestParam("shareDir")String shareDir) throws IOException {
+        Dir dir=dirService.getByUrl(shareDir);
+        int count=urls.size();
+
+        for(String url:urls){
+            url= url.replace(myConfigure.getHdfsUrl(),"");
+            if(url.startsWith(dir.getUrl())){
+                count=fileService.saveToOther(url,dest+url.substring(url.lastIndexOf("/")+1),user+"/")? count-1:count;
+            }
+        }
+        logger.userLogIn(user,"转存文件");
+        return count==0? ResultVOUtil.success("转存成功！"):ResultVOUtil.success(count+"个文件转存失败");
+    }
+
+
+
+
 }

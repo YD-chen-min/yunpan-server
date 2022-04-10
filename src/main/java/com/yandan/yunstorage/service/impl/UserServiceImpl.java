@@ -93,11 +93,11 @@ public class UserServiceImpl  implements UserService {
     }
 
     @Override
-    public List<UserInfo> getUsers(String user) {
+    public List<UserInfo> getUsers(String user,int start,int size) {
         if("".equals(user)){
-            return userDao.getUsers();
+            return userDao.getUsers(start,size);
         }else{
-            return userDao.getUsersLikeUser(user+"%");
+            return userDao.getUsersLikeUser(user+"%",start,size);
         }
     }
 

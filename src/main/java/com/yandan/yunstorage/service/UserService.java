@@ -79,7 +79,7 @@ public interface UserService {
      * @param user
      * @return
      */
-    List<UserInfo> getUsers(String user);
+    List<UserInfo> getUsers(String user,int start,int size);
 
     /**
      * 根据user删除user信息

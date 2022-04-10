@@ -165,8 +165,8 @@ public class UserController {
 
     @GetMapping("/user/getList")
     @ResponseBody
-    public ResultVO getUsers(@RequestParam(value = "user", defaultValue = "") String user) {
-        return ResultVOUtil.success(userService.getUsers(user));
+    public ResultVO getUsers(@RequestParam(value = "user", defaultValue = "") String user,@RequestParam(value = "start", defaultValue = "") int start) {
+        return ResultVOUtil.success(userService.getUsers(user,start,15));
     }
 
     @PostMapping("/user/delete")
