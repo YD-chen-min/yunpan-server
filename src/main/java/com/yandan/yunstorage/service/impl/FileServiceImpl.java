@@ -364,4 +364,9 @@ public class FileServiceImpl implements FileService {
         }
         return false;
     }
+
+    @Override
+    public List<MyFile> searchFile(String name,String root) {
+        return fileDao.search(root,"%"+name+"%");
+    }
 }

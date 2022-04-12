@@ -198,4 +198,11 @@ public interface FileService {
      * @return
      */
     boolean saveToOther(String src,String dest,String rootPath) throws IOException;
+
+    /**
+     * 搜索文件  like %name%;
+     * @param name
+     * @return
+     */
+    List<MyFile> searchFile(String name,String root);
 }

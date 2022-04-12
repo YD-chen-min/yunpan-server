@@ -274,7 +274,6 @@ public class FileController {
     @ResponseBody
     public ResultVO deleteFiles(HttpServletRequest request,
                                 @RequestParam(value = "user") String user,
-                                @RequestParam(value = "path") String path,
                                 @RequestParam(value = "files") String files) throws IOException {
         String ip = getIpAddr(request);
         UserInfo userInfo = userService.getUserInfoByUser(user);
@@ -477,29 +476,6 @@ public class FileController {
         return ResultVOUtil.success(files);
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
-    @GetMapping("/file/deleteFile")
-    @ResponseBody
-    public ResultVO deleteFiles(HttpServletRequest request,
-                                @RequestParam(value = "user") String user,
-                                @RequestParam(value = "url") String url
-    ) throws IOException {
-        String ip = getIpAddr(request);
-        UserInfo userInfo = userService.getUserInfoByUser(user);
-        if (!ip.equals(userInfo.getIp())) {
-            return ResultVOUtil.fail(1, "无权限访问");
-        }
-        String[] urls = url.split(";");
-        int i = 0;
-        int count = urls.length;
-        for (String f : urls) {
-            logger.userLogIn(user,"文件  '"+url.replace(user+"/","")+"'  --->回收站");
-            if (fileService.rename(f, "garbage/" + f))
-                i++;
-            fileService.setDeleteDatabaseFile(f, 1);
-        }
-        return ResultVOUtil.success(count + "个文件，其中" + i + "个文件被删除");
-    }
 
     @Transactional(propagation = Propagation.REQUIRED)
     @GetMapping("/restore/file")
@@ -718,6 +694,19 @@ public class FileController {
         }
         logger.userLogIn(user,"转存文件");
         return count==0? ResultVOUtil.success("转存成功！"):ResultVOUtil.success(count+"个文件转存失败");
+    }
+
+    @GetMapping("file/search")
+    @ResponseBody
+    public ResultVO<List<MyFile>> search(HttpServletRequest request,
+                                         @RequestParam(value = "user") String user,
+                                         @RequestParam(value = "name")String name){
+        String ip = getIpAddr(request);
+        UserInfo userInfo = userService.getUserInfoByUser(user);
+        if (!ip.equals(userInfo.getIp())) {
+            return ResultVOUtil.fail(1, "无权限访问");
+        }
+        return ResultVOUtil.success(fileService.searchFile(name,user+"/"));
     }
 
 
