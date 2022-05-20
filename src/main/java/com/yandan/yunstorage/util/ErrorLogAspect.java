@@ -23,5 +23,7 @@ public class ErrorLogAspect {
     public void doAfterThrowing(JoinPoint joinPoint,Exception e){
         logger.errorLogIn(e.getMessage(),e.getStackTrace());
 
+
     }
+
 }

@@ -189,4 +189,10 @@ public class Logger {
         }
         return null;
     }
+    public void deleteLog(String user){
+        String logPath=myConfigure.getLog();
+        File file=new File(logPath+user+".log");
+        if (file.exists())
+            file.delete();
+    }
 }

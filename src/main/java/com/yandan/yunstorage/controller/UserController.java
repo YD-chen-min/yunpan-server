@@ -187,6 +187,8 @@ public class UserController {
         message += ";  影响数据库表<users>结果数目 : " + count;
         fileService.deleteFiles(user );
         fileService.deleteFiles("garbage/"+user);
+        userService.deleteUserByUser(user);
+        logger.deleteLog(user);
         logger.adminLogIn(message);
         return ResultVOUtil.success("success");
     }
